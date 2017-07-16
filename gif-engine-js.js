@@ -41,8 +41,9 @@ function GIF(buf /* ArrayBuffer */, verbose = false /* Boolean */) {
     log("| Global Colour Table");
     const colours = 2 ** (gif.descriptor.packed.size + 1);
     const gct_view = new Uint8Array(buf.buffer, ++pos, colours * 3);
-    const table = Array(colours).fill(new Uint8Array(3));
+    const table = Array(colours);
     for (let i = 0, p = 0; colours > i; ++i, pos += 3) {
+      table[i] = new Uint8Array(3);
       p = -1;
       table[i][++p] = gct_view[i * 3 + p];
       table[i][++p] = gct_view[i * 3 + p];
@@ -118,8 +119,9 @@ function GIF(buf /* ArrayBuffer */, verbose = false /* Boolean */) {
           log("| Local Colour Table");
           const colours = 2 ** (size + 1);
           const lct_view = new Uint8Array(buf.buffer, ++pos, colours * 3);
-          const table = Array(colours).fill(new Uint8Array(3));
+          const table = Array(colours);
           for (let i = 0, p = 0; colours > i; ++i, pos += 3) {
+            table[i] = new Uint8Array(3);
             p = -1;
             table[i][++p] = lct_view[i * 3 + p];
             table[i][++p] = lct_view[i * 3 + p];
