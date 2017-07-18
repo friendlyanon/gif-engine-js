@@ -18,8 +18,6 @@ See [this Gist][1] for an example output.
 
 ## Todo
 - Better documentation
-- More useful error reporting
-- Promisify
 - Provide more methods, e.g. for returning frames as `ImageData`
 - LZW inflation using asm.js
 - _probably more_
