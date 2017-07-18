@@ -7,9 +7,9 @@ ECMAScript 2017.
 fetch("//url.to/my.gif") // request for a GIF file, can also be a
                          // filesystem read if you use Node
     .then(response => response.arrayBuffer()) // grab the ArrayBuffer
-    .then(buffer => {
-        var objGif = GIF(buffer, /* true */); // synchronous as of now
-        // code to deal with raw GIF data
+    .then(GIF) // ArrayBuffer is first argument
+    .then(gifObj => {
+      // code to manipulate raw GIF data
     })
 ```
 
