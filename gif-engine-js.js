@@ -53,14 +53,14 @@ function GIF(source /* ArrayBuffer */, verbose = true /* Boolean */) {
         table[i][++p] = gct_view[i * 3 + p];
       }
       gif.globalColorTable = table;
-    }
+    } else ++pos;
     let frame = 0;
     const frame_template = () => ({
       graphicExtension: void 0,
       descriptor: void 0,
       localColorTable: void 0,
-      lzw: 0,
-      subBlocks: []
+      minCodeSize: 0,
+      blocks: []
     });
     let err_msg = void 0;
     loop:
@@ -129,7 +129,8 @@ function GIF(source /* ArrayBuffer */, verbose = true /* Boolean */) {
               table[i][++p] = lct_view[i * 3 + p];
               table[i][++p] = lct_view[i * 3 + p];
             }
-            gif.frames[frame].descriptor.localColorTable = table;
+            gif.frames[frame].localColorTable = table;
+            --pos;
           }
           log("| Image Data");
           const lzw = buf[++pos];
@@ -137,18 +138,27 @@ function GIF(source /* ArrayBuffer */, verbose = true /* Boolean */) {
             err_msg = "invalid LZW minimum code size";
             break loop;
           }
-          gif.frames[frame].lzw = lzw;
-          let p = -1;
-          ++pos;
+          gif.frames[frame].minCodeSize = lzw;
+          let totalLength = -1;
+          const startPointer = ++pos;
+          log("| | Counting total sub-block length");
           while(buf[pos] !== 0) {
-            log("| | Sub-block");
             const length = buf[pos];
-            const sub = new Uint8Array(length);
-            for (let i = 0, sub_view = new Uint8Array(source, ++pos, length); length > i; ++i)
-              sub[i] = sub_view[i];
-            gif.frames[frame].subBlocks[++p] = sub;
-            pos += length;
+            totalLength += length;
+            pos += length + 1;
           }
+          log("| | Processing sub-block");
+          const subBlockAccumulator = new Uint8Array(totalLength);
+          let accumulatorPointer = -1;
+          pos = startPointer;
+          while(buf[pos] !== 0) {
+            const length = buf[pos];
+            for (let i = 0; length > i; ++i)
+              subBlockAccumulator[++accumulatorPointer] = buf[++pos];
+            ++pos;
+          }
+          gif.frames[frame].blocks = subBlockAccumulator;
+          log(`| | Sub-block processed`);
           ++pos; log(`| Frame #${++frame} processed`); }
           break;
         case 0x3B: // Tail

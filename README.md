@@ -8,8 +8,8 @@ fetch("//url.to/my.gif") // request for a GIF file, can also be a
                          // filesystem read if you use Node
     .then(response => response.arrayBuffer()) // grab the ArrayBuffer
     .then(GIF) // ArrayBuffer is first argument
-    .then(gifObj => {
-      // code to manipulate raw GIF data
+    .then((gifObj, err) => {
+      // code to manipulate raw GIF data or deal with error
     })
 ```
 
