@@ -19,7 +19,7 @@ function GIF(source /* ArrayBuffer */, verbose = true /* Boolean */) {
   return new Promise(function(resolve, reject) {
     const start = performance.now();
     const length = source.byteLength;
-    const log = verbose ? (msg => console.log(msg)) : (() => {});
+    const log = verbose ? console.log : () => {};
     const buf = new Uint8Array(source);
     let pos = 5;
     log("GIF >");
@@ -59,8 +59,8 @@ function GIF(source /* ArrayBuffer */, verbose = true /* Boolean */) {
       graphicExtension: void 0,
       descriptor: void 0,
       localColorTable: void 0,
-      minCodeSize: 0,
-      blocks: []
+      minCodeSize: void 0,
+      data: void 0
     });
     let err_msg = void 0;
     loop:
@@ -157,8 +157,8 @@ function GIF(source /* ArrayBuffer */, verbose = true /* Boolean */) {
               subBlockAccumulator[++accumulatorPointer] = buf[++pos];
             ++pos;
           }
-          gif.frames[frame].blocks = subBlockAccumulator;
-          log(`| | Sub-block processed`);
+          gif.frames[frame].data = subBlockAccumulator;
+          log("| | Sub-block processed");
           ++pos; log(`| Frame #${++frame} processed`); }
           break;
         case 0x3B: // Tail
@@ -176,4 +176,4 @@ function GIF(source /* ArrayBuffer */, verbose = true /* Boolean */) {
     if (pos !== length) log(`/!\\ Additional ${length - pos} bytes of data after tail ignored`);
     return resolve(gif);
   });
-}
+};
