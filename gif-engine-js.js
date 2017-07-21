@@ -4,6 +4,8 @@
  * To Public License, Version 2, as published by Sam Hocevar. See
  * http://www.wtfpl.net/ for more details. */
 
+/* jshint bitwise: false */
+
 /**
  *  @brief GIF parser
  *  
@@ -17,27 +19,27 @@
  */
 let GIF;
 {
-  const GifObjSymbol = Symbol("GIF");
+  const GifObjSymbol = Symbol();
   const LZW = function(index = 0, clearRawData = false) {
     if (!this[GifObjSymbol])
       throw TypeError("`this` is not a GIF object");
+    if (this.frames[index].data)
+      return this.frames[index].data;
     const { rawData: data, minCodeSize: size, descriptor: { width, height } } = this.frames[index];
     const pixelCount = width * height;
     const pixels = new Array(pixelCount);
     const prefix = new Array(4096);
     const suffix = new Array(4096);
     const pixelStack = new Array(4097);
-    const clear = 1 << size
+    const clear = 1 << size;
     const eoi = clear + 1;
     let available = clear + 2;
     let old_code = -1;
     let code_size = size + 1;
     let code_mask = (1 << code_size) - 1;
     let code = 0;
-    for (; code < clear; ++code) {
-      prefix[code] = 0;
-      suffix[code] = code;
-    }
+    for (; code < clear; ++code)
+      prefix[code] = 0, suffix[code] = code; // jshint ignore: line
     let datum = 0;
     let bits = 0;
     let first = 0;
@@ -103,7 +105,7 @@ let GIF;
       pixels[i] = 0;
     if (clearRawData)
       this.frames[index].rawData = void 0;
-    return this.frames[index].data = pixels;
+    return (this.frames[index].data = pixels);
   };
   const deinterlace = function(index = 0) {
     // dummy
@@ -111,7 +113,7 @@ let GIF;
   const toImageData = function() {
     // dummy
   };
-  const GIF = function(source /* ArrayBuffer */, verbose = false /* Boolean */) {
+  const parser = function(source /* ArrayBuffer */, verbose = false /* Boolean */) {
     return new Promise(function(resolve, reject) {
       const start = performance.now();
       const length = source.byteLength;
@@ -135,9 +137,7 @@ let GIF;
         globalColorTable: void 0,
         repeat: 0,
         frames: [],
-        inflate: void 0,
-        deinterlace: void 0,
-        toImageData: void 0
+        inflate: void 0
       }, GifObjSymbol, { value: true });
       Object.defineProperties(gif, {
         inflate: { value: LZW },
@@ -146,7 +146,7 @@ let GIF;
       });
       if (gif.descriptor.packed.globalColorFlag) {
         log("| Global Color Table");
-        const colors = 2 ** (gif.descriptor.packed.size + 1);
+        const colors = 2 ** (gif.descriptor.packed.size + 1); // jshint ignore: line
         const gct_view = new Uint8Array(source, ++pos, colors * 3);
         const table = Array(colors);
         for (let i = 0, p = 0; colors > i; ++i, pos += 3) {
@@ -223,7 +223,7 @@ let GIF;
             };
             if (local_color === 1) {
               log("| Local Color Table");
-              const colors = 2 ** (size + 1);
+              const colors = 2 ** (size + 1); // jshint ignore: line
               const lct_view = new Uint8Array(source, ++pos, colors * 3);
               const table = Array(colors);
               for (let i = 0, p = 0; colors > i; ++i, pos += 3) {
