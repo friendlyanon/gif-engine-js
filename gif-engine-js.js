@@ -20,7 +20,9 @@
 let GIF;
 {
   const GifObjSymbol = Symbol();
-  const LZW = function(index = 0, clearRawData = false) {
+  const LZW = function(index, clearRawData = false) {
+    if (!(Number.isInteger(index) && -1 < index))
+      throw TypeError("`index` is not a valid number");
     if (!this[GifObjSymbol])
       throw TypeError("`this` is not a GIF object");
     if (this.frames[index].data)
@@ -127,13 +129,13 @@ let GIF;
           width: buf[++pos] | (buf[++pos] << 8),
           height: buf[++pos] | (buf[++pos] << 8),
           packed: {
-            globalColorFlag: (buf[++pos] & 128) >> 7,
+            globalColorTableFlag: (buf[++pos] & 128) >> 7,
             colorResolution: ( (buf[pos] & 64) | (buf[pos] & 32) | (buf[pos] & 16) ) >> 4,
             sortFlag: (buf[pos] & 8) >> 3,
             size: (buf[pos] & 4) | (buf[pos] & 2) | (buf[pos] & 1)
           },
           backgroundColorIndex: buf[++pos],
-          pixelRatio: buf[++pos] },
+          pixelAspectRatio: buf[++pos] },
         globalColorTable: void 0,
         repeat: 0,
         frames: []
@@ -179,7 +181,7 @@ let GIF;
                 if (buf[pos += length] !== 0) { err_msg = "missing null"; break loop; }
                 if (!gif.frames[frame]) gif.frames[frame] = frame_template();
                 gif.frames[frame].graphicExtension = {
-                  disposal: ( (gce_view[p] & 16) | (gce_view[p] & 8) | (gce_view[p] & 4) ) >> 2,
+                  disposalMethod: ( (gce_view[p] & 16) | (gce_view[p] & 8) | (gce_view[p] & 4) ) >> 2,
                   userInputFlag: (gce_view[p] & 2) >> 1,
                   transparentColorFlag: gce_view[p] & 1,
                   delay: gce_view[++p] | (gce_view[++p] << 8),
