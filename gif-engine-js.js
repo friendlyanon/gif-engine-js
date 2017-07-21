@@ -136,8 +136,7 @@ let GIF;
           pixelRatio: buf[++pos] },
         globalColorTable: void 0,
         repeat: 0,
-        frames: [],
-        inflate: void 0
+        frames: []
       }, GifObjSymbol, { value: true });
       Object.defineProperties(gif, {
         inflate: { value: LZW },
