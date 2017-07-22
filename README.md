@@ -52,7 +52,7 @@ if `this` is not a `gifObj`.
   `index`: index of the frame to be processed, must be an `int` bigger than `0`,
   will throw otherwise  
   `?overwriteData`: if this parameter is set to any truthy value, then the
-  `data` property of `gifObj.frames[index]` will overwritten with the result
+  `data` property of `gifObj.frames[index]` will be overwritten with the result
 
   Returns an `Array` containing the deinterlaced color codes
   of the frame and expands `gifObj.frames[index]` with this array to the
