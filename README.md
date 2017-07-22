@@ -23,8 +23,9 @@ fetch("//url.to/my.gif") // request for a GIF file, can also be a filesystem
 `gifObj` from here on out.
 
 ### Methods of a GIF object
-These methods are non-enumerable, non-configurable and non-writeable properties
-of `gifObj`.
+These methods are, non-enumerable, non-configurable and non-writeable properties
+of `gifObj`. They are also non-generic functions, and will throw if `this` is not
+a `gifObj`.
 
 * `inflate`: accepts two parameters `index, clearRawData`
 
@@ -69,7 +70,7 @@ explanation follow the link.
      type: `int`, `0-7`
 * `globalColorTable`: type: `[object Array]` if `globalColorTableFlag`
  equals `1`, otherwise `undefined`  
- individual colors are stored in `Uint8Array`s with the length of `3`
+ individual colors are stored in `[object Array]`s with the length of `3`
 * `repeat`: number of times for the GIF to be repeated and `0` means
  repeat forever - type: `uint8`
 * `frames`: array containing the frames of the GIF - type: `[object Array]`
@@ -115,14 +116,14 @@ The details of the frames are stored in an `[object Object]`.
      type: `int`, `0-7`
 * `localColorTable`: type: `[object Array]` if `localColorTableFlag`
  equals `1`, otherwise `undefined`  
- individual colors are stored in `Uint8Array`s with the length of `3`
+ individual colors are stored in `[object Array]`s with the length of `3`
 * `minCodeSize`:
  minimum code size required for color table building - type: `uint8`, `2-8`
 * `rawData`: type: `[object Array]` containing the concatenated Image Data
  sub-blocks  
  individual bytes are stored as `int`s
 * `data`:  **only present if `.inflate(index)` was used at least once**  
- type: `[object Array]` containing decompressed color codes
+ type: `[object Array]` containing decompressed color codes  
  individual codes are stored as `int`s
 
 ## Example

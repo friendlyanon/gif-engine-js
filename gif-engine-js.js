@@ -4,7 +4,7 @@
  * To Public License, Version 2, as published by Sam Hocevar. See
  * http://www.wtfpl.net/ for more details. */
 
-/* jshint bitwise: false */
+/* jshint bitwise: false, eqeqeq: true */
 
 /**
  *  @brief GIF parser
@@ -69,7 +69,7 @@ let GIF;
           old_code = -1;
           continue;
         }
-        if (old_code == -1) {
+        if (old_code === -1) {
           pixelStack[top] = suffix[code];
           ++top;
           old_code = code;
@@ -124,7 +124,7 @@ let GIF;
       let pos = 5;
       log("GIF >");
       log("| Logical Screen Descriptor");
-      const gif = Object.defineProperty({
+      const gif = Object.defineProperties({
         descriptor: {
           width: buf[++pos] | (buf[++pos] << 8),
           height: buf[++pos] | (buf[++pos] << 8),
@@ -139,19 +139,19 @@ let GIF;
         globalColorTable: void 0,
         repeat: 0,
         frames: []
-      }, GifObjSymbol, { value: true });
-      Object.defineProperties(gif, {
+      }, {
+        [GifObjSymbol]: { value: true },
         inflate: { value: LZW },
         deinterlace: { value: deinterlace },
         toImageData: { value: toImageData }
       });
-      if (gif.descriptor.packed.globalColorFlag) {
+      if (gif.descriptor.packed.globalColorTableFlag) {
         log("| Global Color Table");
         const colors = 2 ** (gif.descriptor.packed.size + 1); // jshint ignore: line
         const gct_view = new Uint8Array(source, ++pos, colors * 3);
         const table = Array(colors);
         for (let i = 0, p = 0; colors > i; ++i, pos += 3) {
-          table[i] = new Uint8Array(3);
+          table[i] = new Array(3);
           p = -1;
           table[i][++p] = gct_view[i * 3 + p];
           table[i][++p] = gct_view[i * 3 + p];
@@ -228,7 +228,7 @@ let GIF;
               const lct_view = new Uint8Array(source, ++pos, colors * 3);
               const table = Array(colors);
               for (let i = 0, p = 0; colors > i; ++i, pos += 3) {
-                table[i] = new Uint8Array(3);
+                table[i] = new Array(3);
                 p = -1;
                 table[i][++p] = lct_view[i * 3 + p];
                 table[i][++p] = lct_view[i * 3 + p];
@@ -253,7 +253,7 @@ let GIF;
               pos += length + 1;
             }
             log("| | Processing sub-block");
-            const subBlockAccumulator = new Uint8Array(totalLength);
+            const subBlockAccumulator = new Array(totalLength);
             let accumulatorPointer = -1;
             pos = startPointer;
             while(buf[pos] !== 0) {
