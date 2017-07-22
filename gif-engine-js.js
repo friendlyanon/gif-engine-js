@@ -14,8 +14,7 @@
  *  @return Promise that resolves as an Object containing raw GIF data or
  *    rejects as an Error object with message marking the location of failure
  *  
- *  @details Function is not production ready yet, needs to have
- *    more methods for returning `ImageData` and LZW inflation
+ *  @details Function is not production ready yet
  */
 const GIF = (() => {
   const GifObjSymbol = Symbol();

@@ -36,23 +36,23 @@ These methods are, non-enumerable, non-configurable and non-writeable properties
 of `gifObj`. They are also asynchronous, non-generic functions that will throw
 if `this` is not a `gifObj`.
 
-* `inflate`: accepts two parameters `index, clearRawData`
+* `inflate`: accepts two parameters `index, ?clearRawData`
 
   `index`: index of the frame to be processed, must be an `int` bigger than `0`,
   will throw otherwise  
-  `clearRawData`: if this parameter is set to any non-falsy value, then the
-  `rawData` property of the source frame object will be set to `void 0`
+  `?clearRawData`: if this parameter is set to any truthy value, then the
+  `rawData` property of `gifObj.frames[index]` will be set to `void 0`
 
   Returns an `Array` containing the LZW decompressed color codes
   of the frame and expands `gifObj.frames[index]` with this array to the `data`
   property.
 
-* `deinterlace`: accepts two parameters `index, overwriteData`
+* `deinterlace`: accepts two parameters `index, ?overwriteData`
 
   `index`: index of the frame to be processed, must be an `int` bigger than `0`,
   will throw otherwise  
-  `overwriteData`: if this parameter is set to any non-falsy value, then the
-  `data` property of the source frame object will overwritten with the result
+  `?overwriteData`: if this parameter is set to any truthy value, then the
+  `data` property of `gifObj.frames[index]` will overwritten with the result
 
   Returns an `Array` containing the deinterlaced color codes
   of the frame and expands `gifObj.frames[index]` with this array to the
