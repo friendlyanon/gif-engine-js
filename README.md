@@ -1,52 +1,73 @@
 # gif-engine-js
-Really basic JavaScript library written in ECMAScript 2017 for parsing
-GIF files.
+Really basic JavaScript library written in ECMAScript 2017 for parsing GIF
+files.
 
 ## Usage
 ```javascript
-fetch("//url.to/my.gif") // request for a GIF file, can also be a filesystem
-                         //  read if you use Node
+fetch("//url.to/my.gif") /* request for a GIF file, can also be a filesystem
+                          * read if you use Node or similar */
     .then(response => response.arrayBuffer()) // grab the ArrayBuffer
-    .then(GIF) // ArrayBuffer is first argument
-    .then((gifObj, err) => {
+    .then(GIF)                                // ArrayBuffer is first argument
+    .then(async (gifObj, err) => {
       // code to manipulate raw GIF data or deal with error
-      
-      const inflatedFrameData = gifObj.inflate(0);
-      // returns an array containing decompressed color codes of the first
-      // frame and also expands the frame's object with this array
-      // gifObj.frames[0].data === inflatedFrameData => true
+
+      const inflatedFrameData = await gifObj.inflate(0);
+      /* returns an array containing decompressed color codes of the first
+       * frame and also expands the frame's object with this array
+       * gifObj.frames[0].data === inflatedFrameData => true */
+
+      const deinterlacedFrameData = await gifObj.deinterlace(0);
+      /* returns an array containing deinterlaced color codes of the first
+       * frame and also expands the frame's object with this array
+       * gifObj.frames[0].deinterlacedData === deinterlacedFrameData => true
+       *
+       * please note that you can call this function without calling
+       * .inflate() first, because it will call it for you when the `data`
+       * property is missing */
     })
 ```
 
 ## Return object
-`GIF` will resolve into an `[object Object]` if successfull. Will be referenced as
-`gifObj` from here on out.
+`GIF` will resolve into an `Object` if successfull. Will be referenced
+as `gifObj` from here on out.
 
 ### Methods of a GIF object
 These methods are, non-enumerable, non-configurable and non-writeable properties
-of `gifObj`. They are also non-generic functions, and will throw if `this` is not
-a `gifObj`.
+of `gifObj`. They are also asynchronous, non-generic functions that will throw
+if `this` is not a `gifObj`.
 
 * `inflate`: accepts two parameters `index, clearRawData`
 
-  `index`: index of the frame to be processed, must be an **integer** bigger than `0`,
+  `index`: index of the frame to be processed, must be an `int` bigger than `0`,
   will throw otherwise  
   `clearRawData`: if this parameter is set to any non-falsy value, then the
   `rawData` property of the source frame object will be set to `void 0`
 
-  Returns an `[object Array]` containing the LZW decompressed color codes
+  Returns an `Array` containing the LZW decompressed color codes
   of the frame and expands `gifObj.frames[index]` with this array to the `data`
   property.
 
-* `deinterlace`: `To Be Added`
+* `deinterlace`: accepts two parameters `index, overwriteData`
+
+  `index`: index of the frame to be processed, must be an `int` bigger than `0`,
+  will throw otherwise  
+  `overwriteData`: if this parameter is set to any non-falsy value, then the
+  `data` property of the source frame object will overwritten with the result
+
+  Returns an `Array` containing the deinterlaced color codes
+  of the frame and expands `gifObj.frames[index]` with this array to the
+  `deinterlacedData` property. If `overwriteData` is true, then `data` will
+  contain the result and `deinterlacedData` will be set to `null`.
+
 * `toImageData`: `To Be Added`
 
 ### Properties of a GIF object
 Property names are in line with the [GIF specification][2], for more detailed
-explanation follow the link.
+explanation follow the link. `gifObj` also contains 2 `Symbol` properties for
+internal uses.
 
 * `descriptor`:
- object containing the `Logical Screen Descriptor` - type: `[object Object]`
+ object containing the `Logical Screen Descriptor` - type: `Object`
   * `width`:
    width of the GIF - type: `uint16`
   * `height`:
@@ -56,7 +77,7 @@ explanation follow the link.
   * `pixelAspectRatio`:
    type: `uint8`
   * `packed`:
-   the *packed* byte - type: `[object Object]`
+   the *packed* byte - type: `Object`
     * `globalColorTableFlag`:
      indicates whether a `Global Color Table` is present or not -
      type: `int`, `0` or `1`
@@ -68,18 +89,18 @@ explanation follow the link.
     * `size`:
      indicates whether the size of `Global Color Table` -
      type: `int`, `0-7`
-* `globalColorTable`: type: `[object Array]` if `globalColorTableFlag`
+* `globalColorTable`: type: `Array` if `globalColorTableFlag`
  equals `1`, otherwise `undefined`  
- individual colors are stored in `[object Array]`s with the length of `3`
+ individual colors are stored in `Array`s with the length of `3`
 * `repeat`: number of times for the GIF to be repeated and `0` means
  repeat forever - type: `uint8`
-* `frames`: array containing the frames of the GIF - type: `[object Array]`
+* `frames`: array containing the frames of the GIF - type: `Array`
 
 ### Properties of frame object
-The details of the frames are stored in an `[object Object]`.
+The details of the frames are stored in an `Object`.
 
 * `graphicExtension`:
- object containing the `Graphics Control Extension` - type: `[object Object]`
+ object containing the `Graphics Control Extension` - type: `Object`
   * `disposalMethod`:
    type: `int`
   * `userInputFlag`:
@@ -92,7 +113,7 @@ The details of the frames are stored in an `[object Object]`.
   * `transparentColorIndex`:
    type: `uint8`
 * `descriptor`:
- object containing the `Image Descriptor` - type: `[object Object]`
+ object containing the `Image Descriptor` - type: `Object`
   * `left`:
    offset of the Image Data from the left of the GIF - type: `uint16`
   * `top`:
@@ -114,17 +135,21 @@ The details of the frames are stored in an `[object Object]`.
     * `size`:
      indicates whether the size of `Local Color Table` -
      type: `int`, `0-7`
-* `localColorTable`: type: `[object Array]` if `localColorTableFlag`
+* `localColorTable`: type: `Array` if `localColorTableFlag`
  equals `1`, otherwise `undefined`  
- individual colors are stored in `[object Array]`s with the length of `3`
+ individual colors are stored in `Array`s with the length of `3`
 * `minCodeSize`:
  minimum code size required for color table building - type: `uint8`, `2-8`
-* `rawData`: type: `[object Array]` containing the concatenated Image Data
- sub-blocks  
- individual bytes are stored as `int`s
-* `data`:  **only present if `.inflate(index)` was used at least once**  
- type: `[object Array]` containing decompressed color codes  
- individual codes are stored as `int`s
+* `rawData`:  contains the concatenated Image Data sub-blocks - type: `Array`,
+ will be `undefined` if you call `.inflate(index, true)`  
+ individual bytes are stored as `uint8`s
+* `data`: contains decompressed color codes - type: `Array`
+ if `.inflate()` was called, otherwise `undefined`  
+ individual codes are stored as `uint8`s
+* `deinterlacedData`: contains deinterlaced color codes - type: `Array`
+ if `.deinterlace()` was called or `null` if `.deinterlace(index, true)` was
+ called, otherwise `undefined`  
+ individual codes are stored as `uint8`s
 
 ## Example
 See [this Gist][1] for an example output.
