@@ -24,8 +24,21 @@ fetch("//url.to/my.gif") /* request for a GIF file, can also be a filesystem
        * please note that you can call this function without calling
        * .inflate() first, because it will call it for you when the `data`
        * property is missing */
+
+      const imageData = await gifObj.toImageData(0);
+      /* returns an ImageData object ready to be used in a <canvas>
+       * using this will NOT extend gifObj.frames[0] with an properties
+       *
+       * please note that you can call this function without calling
+       * .inflate() first *and .deinterlace() if necessary*, because it
+       * will call them for you when necessary */
     })
 ```
+
+## Motivation
+I needed a versatile library to process GIFs for personal use, but the already
+available libraries out there all came with extra fluff that made it look
+difficult to achieve what I wanted using them.
 
 ## Return object
 `GIF` will resolve into an `Object` if successfull. Will be referenced
@@ -57,9 +70,22 @@ if `this` is not a `gifObj`.
   Returns an `Array` containing the deinterlaced color codes
   of the frame and expands `gifObj.frames[index]` with this array to the
   `deinterlacedData` property. If `overwriteData` is true, then `data` will
-  contain the result and `deinterlacedData` will be set to `null`.
+  contain the result and `deinterlacedData` will be set to `null`. If the user
+  didn't use `.inflate()`, then this function will do that with the optional
+  parameter (`clearRawData`) set to true, to avoid needlessly taking up memory
+  space. This method will only be called if the user omitted preprocessing the
+  frames themselves.
 
-* `toImageData`: `To Be Added`
+* `toImageData`: accepts one parameter `index`
+
+  `index`: index of the frame to be processed, must be an `int` bigger than `0`,
+  will throw otherwise
+
+  Returns an `ImageData` object ready to be used in a `<canvas>`. If the user
+  didn't use `.inflate()` *or `.deinterlace()` if needed*, then this function
+  will do that with both optional parameters (`clearRawData`, `overwriteData`)
+  set to true, to avoid needlessly taking up memory space. These methods will
+  only be called if the user omitted preprocessing the frames themselves.
 
 ### Properties of a GIF object
 Property names are in line with the [GIF specification][2], for more detailed
@@ -153,11 +179,6 @@ The details of the frames are stored in an `Object`.
 
 ## Example
 See [this Gist][1] for an example output.
-
-## Todo
-- Better documentation
-- Provide more methods, e.g. for returning frames as `ImageData`
-- _probably more_
 
 ## Sources
 [What's In A GIF - Bit by Byte][3] - Very easy to understand and detailed blog

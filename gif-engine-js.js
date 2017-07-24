@@ -4,23 +4,27 @@
  * To Public License, Version 2, as published by Sam Hocevar. See
  * http://www.wtfpl.net/ for more details. */
 
-/* jshint bitwise: false, eqeqeq: true */
-
 /**
  *  @brief GIF parser
  *  
  *  @param [in] source ArrayBuffer of an entire GIF file
- *  @param [in] ?verbose Display in `console` what is being processed
+ *  @param [in] ?verbose Display in `console` what is being processed, default = false
  *  @return Promise that resolves as an Object containing raw GIF data or
  *    rejects as an Error object with message marking the location of failure
- *  
- *  @details Function is not production ready yet
  */
 const GIF = (() => {
   const GifObjSymbol = Symbol();
   const GifObjInterlaceSymbol = Symbol();
+  /**
+   *  @brief LZW Decompressing for GIF
+   *  
+   *  @param [in] index Index of a frame to be inflated
+   *  @param [in] ?clearRawData if true, then the `rawData` property of the source will be
+   *    set to `undefined`
+   *  @return Array containing the inflated data
+   */
   const LZW = async function(index, clearRawData = false) {
-    if (!(Number.isInteger(index) && -1 < index))
+    if (!(Number.isInteger(index) && index > -1))
       throw new TypeError("`index` is not a valid number");
     if (!this[GifObjSymbol])
       throw new TypeError("`this` is not a GIF object");
@@ -39,8 +43,8 @@ const GIF = (() => {
     let code_size = size + 1;
     let code_mask = (1 << code_size) - 1;
     let code = 0;
-    for (; code < clear; ++code)
-      prefix[code] = 0, suffix[code] = code; // jshint ignore: line
+    for (; clear > code; ++code)
+      prefix[code] = 0, suffix[code] = code;
     let datum = 0;
     let bits = 0;
     let first = 0;
@@ -48,9 +52,9 @@ const GIF = (() => {
     let bi = 0;
     let pi = 0;
     let in_code;
-    for (let i = 0; i < pixelCount; ++i) {
+    for (let i = 0; pixelCount > i; ++i) {
       if (top === 0) {
-        if (bits < code_size) {	
+        if (code_size > bits) {	
           datum += data[bi] << bits;
           bits += 8;
           ++bi;
@@ -89,10 +93,10 @@ const GIF = (() => {
         first = suffix[code] & 0xFF;
         pixelStack[top] = first;
         ++top;
-        if (available < 4096) {
+        if (4096 > available) {
           prefix[available] = old_code;
           suffix[available] = first;
-          if (((++available & code_mask) === 0) && (available < 4096)) {
+          if (((++available & code_mask) === 0) && (4096 > available)) {
             ++code_size;
             code_mask += available;
           }
@@ -102,33 +106,43 @@ const GIF = (() => {
       pixels[pi] = pixelStack[--top];
       ++pi;
     }
-    for (let i = pi; i < pixelCount; ++i)
+    for (let i = pi; pixelCount > i; ++i)
       pixels[i] = 0;
     if (clearRawData)
       this.frames[index].rawData = void 0;
     return (this.frames[index].data = pixels);
   };
+  /**
+   *  @brief GIF Frame Deinterlacer
+   *  
+   *  @param [in] index Index of a frame to be deinterlaced
+   *  @param [in] ?overwriteData if true, then the `data` property of the source will be
+   *    set to the returned array of deinterlaced data
+   *  @return Array containing the deinterlaced frame
+   */
   const deinterlace = async function(index, overwriteData = false) {
-    if (!(Number.isInteger(index) && -1 < index))
+    if (!(Number.isInteger(index) && index > -1))
       throw new TypeError("`index` is not a valid number");
     if (!this[GifObjSymbol])
       throw new TypeError("`this` is not a GIF object");
-    if (this.frames[index].descriptor.packed.interlaceFlag === 0)
+    const frame = this.frames[index];
+    if (frame.descriptor.packed.interlaceFlag === 0)
       throw new TypeError("Can't deinterlace a non-interlaced frame");
     if (this[GifObjInterlaceSymbol])
-      return this.frames[index].deinterlacedData;
-    if (!this.frames[index].data)
-      await this.inflate(index);
-    const frame = this.frames[index];
-    const { descriptor: width, data: length, data } = frame;
-    const rows = length / width;
-    const newPixels = new Arraylength(length);
+      return frame.deinterlacedData;
+    if (!frame.data)
+      await this.inflate(index, true);
+    const { descriptor: { width }, data, data: { length: l } } = frame;
+    const rows = l / width;
+    const newPixels = new Array(l);
     const offsets = [0, 4, 2, 1];
     const steps = [8, 8, 4, 2];
     let fromRow = -1;
-    for (let pass = 0; pass < 4; ++pass)
-      for (let toRow = offsets[pass]; toRow < rows; toRow += steps[pass])
-        newPixels.splice(toRow * width, width, ...data.slice(++fromRow * width, (fromRow + 1) * width));
+    for (let pass = 0; 4 > pass; ++pass)
+      for (let toRow = offsets[pass], i; rows > toRow; toRow += steps[pass])
+        newPixels.splice(toRow * width, width,
+          ...data.slice(++fromRow * width, (fromRow + 1) * width)
+        );
     if (overwriteData) {
       frame.data = newPixels;
       frame.deinterlacedData = null;
@@ -137,8 +151,36 @@ const GIF = (() => {
     Object.defineProperty(this, GifObjInterlaceSymbol, { value: true });
     return newPixels;
   };
+  /**
+   *  @brief Convert Frame Data into ImageData
+   *  
+   *  @param [in] index Index of a frame to be converted to ImageData
+   *  @return Returns an ImageData object ready to be used in a canvas
+   */
   const toImageData = async function(index) {
-    // dummy
+    if (!(Number.isInteger(index) && index > -1))
+      throw new TypeError("`index` is not a valid number");
+    if (!this[GifObjSymbol])
+      throw new TypeError("`this` is not a GIF object");
+    const frame = this.frames[index];
+    if (!frame.data)
+      await this.inflate(index, true);
+    const interlace = frame.descriptor.packed.interlaceFlag === 1;
+    if (interlace && !this[GifObjInterlaceSymbol])
+      await this.deinterlace(index, true);
+    const data = frame.deinterlacedData === null ? frame.data : frame.deinterlacedData;
+    const { length } = data;
+    const imageData = new Uint8ClampedArray(4 * length);
+    const colorTable = frame.descriptor.packed.localColorTableFlag ? frame.localColorTable : this.globalColorTable;
+    const { transparentColorIndex } = frame.graphicExtension;
+    for (let i = 0, p = -1; colorTable.length > i; ++i) {
+      let color = colorTable[i];
+      imageData[++p] = color[0];
+      imageData[++p] = color[1];
+      imageData[++p] = color[2];
+      imageData[++p] = i === transparentColorIndex ? 255 : 0;
+    }
+    return new ImageData(imageData, frame.descriptor.width, frame.descriptor.height);
   };
   const parser = async function(source /* ArrayBuffer */, verbose = false /* Boolean */) {
     const start = performance.now();
@@ -171,7 +213,7 @@ const GIF = (() => {
     });
     if (gif.descriptor.packed.globalColorTableFlag) {
       log("| Global Color Table");
-      const colors = 2 ** (gif.descriptor.packed.size + 1); // jshint ignore: line
+      const colors = 2 ** (gif.descriptor.packed.size + 1);
       const gct_view = new Uint8Array(source, ++pos, colors * 3);
       const table = Array(colors);
       for (let i = 0, p = 0; colors > i; ++i, pos += 3) {
@@ -206,12 +248,13 @@ const GIF = (() => {
               let p = 0, gce_view = new Uint8Array(source, ++pos, length);
               if (buf[pos += length] !== 0) { err_msg = "missing null"; break loop; }
               if (!gif.frames[frame]) gif.frames[frame] = frame_template();
+              let flag;
               gif.frames[frame].graphicExtension = {
                 disposalMethod: ( (gce_view[p] & 16) | (gce_view[p] & 8) | (gce_view[p] & 4) ) >> 2,
                 userInputFlag: (gce_view[p] & 2) >> 1,
-                transparentColorFlag: gce_view[p] & 1,
+                transparentColorFlag: flag = gce_view[p] & 1,
                 delay: gce_view[++p] | (gce_view[++p] << 8),
-                transparentColorIndex: gce_view[++p] };
+                transparentColorIndex: flag ? gce_view[++p] : (++p, 0) };
             } break;
             case 0xFF: { // Application
               log("| | Application");
@@ -250,7 +293,7 @@ const GIF = (() => {
           };
           if (local_color === 1) {
             log("| Local Color Table");
-            const colors = 2 ** (size + 1); // jshint ignore: line
+            const colors = 2 ** (size + 1);
             const lct_view = new Uint8Array(source, ++pos, colors * 3);
             const table = Array(colors);
             for (let i = 0, p = 0; colors > i; ++i, pos += 3) {
