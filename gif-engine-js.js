@@ -139,7 +139,7 @@ const GIF = (() => {
     const steps = [8, 8, 4, 2];
     let fromRow = -1;
     for (let pass = 0; 4 > pass; ++pass)
-      for (let toRow = offsets[pass], i; rows > toRow; toRow += steps[pass])
+      for (let toRow = offsets[pass]; rows > toRow; toRow += steps[pass])
         newPixels.splice(toRow * width, width,
           ...data.slice(++fromRow * width, (fromRow + 1) * width)
         );
@@ -253,7 +253,7 @@ const GIF = (() => {
                 disposalMethod: ( (gce_view[p] & 16) | (gce_view[p] & 8) | (gce_view[p] & 4) ) >> 2,
                 userInputFlag: (gce_view[p] & 2) >> 1,
                 transparentColorFlag: flag = gce_view[p] & 1,
-                delay: gce_view[++p] | (gce_view[++p] << 8),
+                delay: (gce_view[++p] | (gce_view[++p] << 8)) * 10,
                 transparentColorIndex: flag ? gce_view[++p] : (++p, 0) };
             } break;
             case 0xFF: { // Application
