@@ -4,6 +4,9 @@
  * To Public License, Version 2, as published by Sam Hocevar. See
  * http://www.wtfpl.net/ for more details. */
 
+// https://github.com/friendlyanon/gif-engine-js
+// by friendlyanon, 2017
+
 /**
  *  @brief GIF parser
  *  
@@ -140,9 +143,7 @@ const GIF = (() => {
     let fromRow = -1;
     for (let pass = 0; 4 > pass; ++pass)
       for (let toRow = offsets[pass]; rows > toRow; toRow += steps[pass])
-        newPixels.splice(toRow * width, width,
-          ...data.slice(++fromRow * width, (fromRow + 1) * width)
-        );
+        newPixels.splice(toRow * width, width, ...data.slice(++fromRow * width, (fromRow + 1) * width));
     if (overwriteData) {
       frame.data = newPixels;
       frame.deinterlacedData = null;
