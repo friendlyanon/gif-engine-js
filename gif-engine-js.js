@@ -169,13 +169,13 @@ const GIF = (() => {
     const interlace = frame.descriptor.packed.interlaceFlag === 1;
     if (interlace && !this[GifObjInterlaceSymbol])
       await this.deinterlace(index, true);
-    const data = frame.deinterlacedData === null ? frame.data : frame.deinterlacedData;
+    const data = frame.deinterlacedData || frame.data;
     const { length } = data;
     const imageData = new Uint8ClampedArray(4 * length);
     const colorTable = frame.descriptor.packed.localColorTableFlag ? frame.localColorTable : this.globalColorTable;
     const { transparentColorIndex } = frame.graphicExtension;
-    for (let i = 0, p = -1; colorTable.length > i; ++i) {
-      let color = colorTable[i];
+    for (let i = 0, p = -1; length > i; ++i) {
+      let color = colorTable[data[i]];
       imageData[++p] = color[0];
       imageData[++p] = color[1];
       imageData[++p] = color[2];
