@@ -179,7 +179,7 @@ const GIF = (() => {
       imageData[++p] = color[0];
       imageData[++p] = color[1];
       imageData[++p] = color[2];
-      imageData[++p] = i === transparentColorIndex ? 255 : 0;
+      imageData[++p] = i !== transparentColorIndex ? 255 : 0;
     }
     return new ImageData(imageData, frame.descriptor.width, frame.descriptor.height);
   };
