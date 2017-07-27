@@ -82,12 +82,12 @@ if `this` is not a `gifObj`.
   will throw otherwise
 
   Returns an `Array` with this structure: `[ImageData, offsetTop, offsetLeft]`.
-  It is recommended to destructure this array as `ctx.putImageData()` parameters
-  If the user didn't use `.inflate()` *or `.deinterlace()` if needed*, then this
-  function will do that with both optional parameters (`clearRawData`,
-  `overwriteData`) set to true, to avoid needlessly taking up memory space.
-  These methods will only be called if the user omitted preprocessing the frames
-  themselves.
+  It is recommended to destructure this array as parameters like so
+  `ctx.putImageData(...gifObj.toImageData(0))`. If the user didn't use
+  `.inflate()` *or `.deinterlace()` if needed*, then this function will do that
+  with both optional parameters (`clearRawData`, `overwriteData`) set to true,
+  to avoid needlessly taking up memory space. These methods will only be called
+  if the user omitted preprocessing the frames themselves.
 
 ### Properties of a GIF object
 Property names are in line with the [GIF specification][2], for more detailed
