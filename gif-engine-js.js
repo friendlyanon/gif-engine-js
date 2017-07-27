@@ -170,18 +170,19 @@ const GIF = (() => {
     if (interlace && !this[GifObjInterlaceSymbol])
       await this.deinterlace(index, true);
     const data = frame.deinterlacedData || frame.data;
-    const { length } = data;
+    const { width, height, top, left } = frame.descriptor;
+    const length = width * height;
     const imageData = new Uint8ClampedArray(4 * length);
     const colorTable = frame.descriptor.packed.localColorTableFlag ? frame.localColorTable : this.globalColorTable;
     const { transparentColorIndex } = frame.graphicExtension;
     for (let i = 0, p = -1; length > i; ++i) {
-      let color = colorTable[data[i]];
+      let code = data[i], color = colorTable[code];
       imageData[++p] = color[0];
       imageData[++p] = color[1];
       imageData[++p] = color[2];
-      imageData[++p] = i !== transparentColorIndex ? 255 : 0;
+      imageData[++p] = code === transparentColorIndex ? 0 : 255;
     }
-    return new ImageData(imageData, frame.descriptor.width, frame.descriptor.height);
+    return [new ImageData(imageData, width, height), top, left];
   };
   const parser = async function(source /* ArrayBuffer */, verbose = false /* Boolean */) {
     const start = performance.now();

@@ -81,11 +81,13 @@ if `this` is not a `gifObj`.
   `index`: index of the frame to be processed, must be an `int` bigger than `0`,
   will throw otherwise
 
-  Returns an `ImageData` object ready to be used in a `<canvas>`. If the user
-  didn't use `.inflate()` *or `.deinterlace()` if needed*, then this function
-  will do that with both optional parameters (`clearRawData`, `overwriteData`)
-  set to true, to avoid needlessly taking up memory space. These methods will
-  only be called if the user omitted preprocessing the frames themselves.
+  Returns an `Array` with this structure: `[ImageData, offsetTop, offsetLeft]`.
+  It is recommended to destructure this array as `ctx.putImageData()` parameters
+  If the user didn't use `.inflate()` *or `.deinterlace()` if needed*, then this
+  function will do that with both optional parameters (`clearRawData`,
+  `overwriteData`) set to true, to avoid needlessly taking up memory space.
+  These methods will only be called if the user omitted preprocessing the frames
+  themselves.
 
 ### Properties of a GIF object
 Property names are in line with the [GIF specification][2], for more detailed
