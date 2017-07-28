@@ -42,9 +42,9 @@ const GIF = (() => {
     const clear = 1 << size;
     const eoi = clear + 1;
     let available = clear + 2;
-    let old_code = -1;
-    let code_size = size + 1;
-    let code_mask = (1 << code_size) - 1;
+    let oldCode = -1;
+    let codeSize = size + 1;
+    let codeMask = (1 << codeSize) - 1;
     let code = 0;
     for (; clear > code; ++code)
       prefix[code] = 0, suffix[code] = code;
@@ -54,38 +54,38 @@ const GIF = (() => {
     let top = 0;
     let bi = 0;
     let pi = 0;
-    let in_code;
+    let inCode;
     for (let i = 0; pixelCount > i; ++i) {
       if (top === 0) {
-        if (code_size > bits) {	
+        if (codeSize > bits) {	
           datum += data[bi] << bits;
           bits += 8;
           ++bi;
           continue;
         }
-        code = datum & code_mask;
-        datum >>= code_size;
-        bits -= code_size;
+        code = datum & codeMask;
+        datum >>= codeSize;
+        bits -= codeSize;
         if ((code > available) || (code === eoi))
           break;
         if (code === clear) {
-          code_size = size + 1;
-          code_mask = (1 << code_size) - 1;
+          codeSize = size + 1;
+          codeMask = (1 << codeSize) - 1;
           available = clear + 2;
-          old_code = -1;
+          oldCode = -1;
           continue;
         }
-        if (old_code === -1) {
+        if (oldCode === -1) {
           pixelStack[top] = suffix[code];
           ++top;
-          old_code = code;
+          oldCode = code;
           first = code;
           continue;
         }
-        in_code = code;
+        inCode = code;
         if (code === available) {
           pixelStack[top] = first;
-          code = old_code;
+          code = oldCode;
           ++top;
         }
         while (code > clear) {
@@ -97,14 +97,14 @@ const GIF = (() => {
         pixelStack[top] = first;
         ++top;
         if (4096 > available) {
-          prefix[available] = old_code;
+          prefix[available] = oldCode;
           suffix[available] = first;
-          if (((++available & code_mask) === 0) && (4096 > available)) {
-            ++code_size;
-            code_mask += available;
+          if (((++available & codeMask) === 0) && (4096 > available)) {
+            ++codeSize;
+            codeMask += available;
           }
         }
-        old_code = in_code;
+        oldCode = inCode;
       }
       pixels[pi] = pixelStack[--top];
       ++pi;
@@ -216,19 +216,19 @@ const GIF = (() => {
     if (gif.descriptor.packed.globalColorTableFlag) {
       log("| Global Color Table");
       const colors = 2 ** (gif.descriptor.packed.size + 1);
-      const gct_view = new Uint8Array(source, ++pos, colors * 3);
+      const gctView = new Uint8Array(source, ++pos, colors * 3);
       const table = Array(colors);
       for (let i = 0, p = 0; colors > i; ++i, pos += 3) {
         table[i] = new Array(3);
         p = -1;
-        table[i][++p] = gct_view[i * 3 + p];
-        table[i][++p] = gct_view[i * 3 + p];
-        table[i][++p] = gct_view[i * 3 + p];
+        table[i][++p] = gctView[i * 3 + p];
+        table[i][++p] = gctView[i * 3 + p];
+        table[i][++p] = gctView[i * 3 + p];
       }
       gif.globalColorTable = table;
     } else ++pos;
     let frame = 0;
-    const frame_template = () => ({
+    const frameTemplate = () => ({
       graphicExtension: void 0,
       deinterlacedData: void 0,
       localColorTable: void 0,
@@ -237,7 +237,8 @@ const GIF = (() => {
       rawData: void 0,
       data: void 0
     });
-    let err_msg = void 0;
+    const NETSCAPE = [0x4E, 0x45, 0x54, 0x53, 0x43, 0x41, 0x50, 0x45, 0x32, 0x2E, 0x30];
+    let errMsg = void 0;
     loop:
     for (;length > pos;) {
       switch(buf[pos]) {
@@ -247,39 +248,48 @@ const GIF = (() => {
             case 0xF9: { // Graphics Control
               log("| | Graphics Control");
               const length = buf[++pos];
-              let p = 0, gce_view = new Uint8Array(source, ++pos, length);
-              if (buf[pos += length] !== 0) { err_msg = "missing null"; break loop; }
-              if (!gif.frames[frame]) gif.frames[frame] = frame_template();
+              let p = 0, gceView = new Uint8Array(source, ++pos, length);
+              if (buf[pos += length] !== 0) { errMsg = "missing null"; break loop; }
+              if (!gif.frames[frame]) gif.frames[frame] = frameTemplate();
               let flag;
               gif.frames[frame].graphicExtension = {
-                disposalMethod: ( (gce_view[p] & 16) | (gce_view[p] & 8) | (gce_view[p] & 4) ) >> 2,
-                userInputFlag: (gce_view[p] & 2) >> 1,
-                transparentColorFlag: flag = gce_view[p] & 1,
-                delay: (gce_view[++p] | (gce_view[++p] << 8)) * 10,
-                transparentColorIndex: flag ? gce_view[++p] : (++p, 0) };
+                disposalMethod: ( (gceView[p] & 16) | (gceView[p] & 8) | (gceView[p] & 4) ) >> 2,
+                userInputFlag: (gceView[p] & 2) >> 1,
+                transparentColorFlag: flag = gceView[p] & 1,
+                delay: (gceView[++p] | (gceView[++p] << 8)) * 10,
+                transparentColorIndex: flag ? gceView[++p] : (++p, 0) };
             } break;
             case 0xFF: { // Application
               log("| | Application");
               const length = buf[++pos];
-              if (length !== 11) { err_msg = "app extension of 11 byte length expected"; break loop; }
-              if (buf[pos += length + 2] !== 1) { err_msg = "invalid app extension sub-block"; break loop; }
-              gif.repeat = buf[++pos] | (buf[++pos] << 8);
-              if (buf[++pos] !== 0) { err_msg = "missing null"; break loop; }
+              if (length !== 11) { errMsg = "app extension header of 11 byte length expected"; break loop; }
+              let isNetscape = true;
+              for (let i = 0; length > i && isNetscape; ++i)
+                isNetscape = NETSCAPE[i] === buf[1 + i + pos];
+              if (isNetscape) {
+                if (buf[pos += length + 2] !== 1) { errMsg = "invalid NETSCAPE block"; break loop; }
+                gif.repeat = buf[++pos] | (buf[++pos] << 8);
+                if (buf[++pos] !== 0) { errMsg = "missing null"; break loop; }
+              }
+              else {
+                while(buf[++pos] !== 0);
+                ++pos;
+              }
             } break;
             case 0xFE: // Comment
             case 0x01: // Plain Text
               while(buf[++pos] !== 0) pos += buf[pos];
               break;
             default:
-              err_msg = "unknown extension";
+              errMsg = "unknown extension";
               break loop;
           }
           ++pos;
           break;
         case 0x2C: { // Image Descriptor
-          if (!gif.frames[frame]) gif.frames[frame] = frame_template();
+          if (!gif.frames[frame]) gif.frames[frame] = frameTemplate();
           log(`| Image Descriptor #${1+frame}`);
-          let local_color = 0;
+          let localColor = 0;
           let size = 0;
           gif.frames[frame].descriptor = {
             left: buf[++pos] | (buf[++pos] << 8),
@@ -287,23 +297,23 @@ const GIF = (() => {
             width: buf[++pos] | (buf[++pos] << 8),
             height: buf[++pos] | (buf[++pos] << 8),
             packed: {
-              localColorTableFlag: local_color = (buf[++pos] & 128) >> 7,
+              localColorTableFlag: localColor = (buf[++pos] & 128) >> 7,
               interlaceFlag: (buf[pos] & 64) >> 6,
               sortFlag: (buf[pos] & 32) >> 5,
               size: size = (buf[pos] & 4) | (buf[pos] & 2) | (buf[pos] & 1)
             }
           };
-          if (local_color === 1) {
+          if (localColor === 1) {
             log("| Local Color Table");
             const colors = 2 ** (size + 1);
-            const lct_view = new Uint8Array(source, ++pos, colors * 3);
+            const lctView = new Uint8Array(source, ++pos, colors * 3);
             const table = Array(colors);
             for (let i = 0, p = 0; colors > i; ++i, pos += 3) {
               table[i] = new Array(3);
               p = -1;
-              table[i][++p] = lct_view[i * 3 + p];
-              table[i][++p] = lct_view[i * 3 + p];
-              table[i][++p] = lct_view[i * 3 + p];
+              table[i][++p] = lctView[i * 3 + p];
+              table[i][++p] = lctView[i * 3 + p];
+              table[i][++p] = lctView[i * 3 + p];
             }
             gif.frames[frame].localColorTable = table;
             --pos;
@@ -311,7 +321,7 @@ const GIF = (() => {
           log("| Image Data");
           const lzw = buf[++pos];
           if (lzw > 8 || 2 > lzw) {
-            err_msg = "invalid LZW minimum code size";
+            errMsg = "invalid LZW minimum code size";
             break loop;
           }
           gif.frames[frame].minCodeSize = lzw;
@@ -342,12 +352,12 @@ const GIF = (() => {
           ++pos;
           break loop;
         default:
-          err_msg = "unknown block";
+          errMsg = "unknown block";
           break loop;
       }
     }
-    if (err_msg)
-      throw new TypeError(`${err_msg}\n0x${buf[pos].toString(16).toUpperCase().padStart(2, 0)} @ 0x${pos.toString(16).toUpperCase().padStart(8, 0)}`);
+    if (errMsg)
+      throw new TypeError(`${errMsg}\n0x${buf[pos].toString(16).toUpperCase().padStart(2, 0)} @ 0x${pos.toString(16).toUpperCase().padStart(8, 0)}`);
     if (pos !== length) log(`/!\\ Additional ${length - pos} bytes of data after tail ignored`);
     return gif;
   };
