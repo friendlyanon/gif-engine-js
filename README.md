@@ -81,7 +81,7 @@ if `this` is not a `gifObj`.
   `index`: index of the frame to be processed, must be an `int` bigger than `0`,
   will throw otherwise
 
-  Returns an `Array` with this structure: `[ImageData, offsetTop, offsetLeft]`.
+  Returns an `Array` with this structure: `[ImageData, offsetLeft, offsetTop]`.
   It is recommended to destructure this array as parameters like so
   `ctx.putImageData(...gifObj.toImageData(0))`. If the user didn't use
   `.inflate()` *or `.deinterlace()` if needed*, then this function will do that
