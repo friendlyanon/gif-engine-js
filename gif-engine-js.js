@@ -211,8 +211,7 @@ const GIF = (() => {
       [GifObjSymbol]: { value: true },
       inflate: { value: LZW },
       deinterlace: { value: deinterlace },
-      toImageData: { value: toImageData },
-      drawFrameToCanvas: { value: drawFrameToCanvas }
+      toImageData: { value: toImageData }
     });
     if (gif.descriptor.packed.globalColorTableFlag) {
       log("| Global Color Table");
