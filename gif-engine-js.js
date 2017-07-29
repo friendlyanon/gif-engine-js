@@ -55,7 +55,7 @@ const GIF = (() => {
     let bi = 0;
     let pi = 0;
     let inCode;
-    for (let i = 0; pixelCount > i; ++i) {
+    for (let i = 0; pixelCount > i;) {
       if (top === 0) {
         if (codeSize > bits) {	
           datum += data[bi] << bits;
@@ -108,6 +108,7 @@ const GIF = (() => {
       }
       pixels[pi] = pixelStack[--top];
       ++pi;
+      ++i;
     }
     for (let i = pi; pixelCount > i; ++i)
       pixels[i] = 0;
@@ -166,11 +167,10 @@ const GIF = (() => {
     const frame = this.frames[index];
     if (!frame.data)
       await this.inflate(index, true);
-    const interlace = frame.descriptor.packed.interlaceFlag === 1;
-    if (interlace && !this[GifObjInterlaceSymbol])
+    if (frame.descriptor.packed.interlaceFlag === 1 && !this[GifObjInterlaceSymbol])
       await this.deinterlace(index, true);
     const data = frame.deinterlacedData || frame.data;
-    const { width, height, top, left } = frame.descriptor;
+    const { width, height, left, top } = frame.descriptor;
     const length = width * height;
     const imageData = new Uint8ClampedArray(4 * length);
     const colorTable = frame.descriptor.packed.localColorTableFlag ? frame.localColorTable : this.globalColorTable;
@@ -182,7 +182,7 @@ const GIF = (() => {
       imageData[++p] = color[2];
       imageData[++p] = code === transparentColorIndex ? 0 : 255;
     }
-    return [new ImageData(imageData, width, height), top, left];
+    return [new ImageData(imageData, width, height), left, top];
   };
   const parser = async function(source /* ArrayBuffer */, verbose = false /* Boolean */) {
     const start = performance.now();
@@ -211,7 +211,8 @@ const GIF = (() => {
       [GifObjSymbol]: { value: true },
       inflate: { value: LZW },
       deinterlace: { value: deinterlace },
-      toImageData: { value: toImageData }
+      toImageData: { value: toImageData },
+      drawFrameToCanvas: { value: drawFrameToCanvas }
     });
     if (gif.descriptor.packed.globalColorTableFlag) {
       log("| Global Color Table");
