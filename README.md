@@ -180,7 +180,8 @@ The details of the frames are stored in an `Object`.
  individual codes are stored as `uint8`s
 
 ## Example
-See [this Gist][1] for an example output.
+See [the project page][1] on my GitHub Pages for an example usage.
+Worker addition can be found in [this Gist][5].
 
 ## Sources
 [What's In A GIF - Bit by Byte][3] - Very easy to understand and detailed blog
@@ -191,7 +192,8 @@ by Matthew Flickinger
 ## License
 WTFPL
 
-[1]: https://gist.github.com/friendlyanon/2bf98ba6f15159590cf74502135f5c17
+[1]: https://friendlyanon.github.io/gif-engine-js/
 [2]: https://www.w3.org/Graphics/GIF/spec-gif89a.txt
 [3]: http://www.matthewflickinger.com/lab/whatsinagif/bits_and_bytes.asp
 [4]: https://github.com/matt-way/gifuct-js
+[5]: https://gist.github.com/friendlyanon/c63fe71a01001ce744b94cb65a8fca1e
