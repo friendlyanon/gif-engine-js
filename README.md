@@ -1,6 +1,6 @@
 # gif-engine-js
 Really basic JavaScript library written in ECMAScript 2017 for parsing GIF
-files.
+(/gɪf/ **not** /ˈdʒɪf/) files.
 
 ## Usage
 ```javascript
@@ -42,7 +42,10 @@ difficult to achieve what I wanted using them.
 
 ## Return object
 `GIF` will resolve into an `Object` if successfull. Will be referenced
-as `gifObj` from here on out.
+as `gifObj` from here on out. Please do note that a `gifObj` contains `function`
+methods and `Symbol` properties, so [structured clone algorithm][6] will fail to
+copy it properly to a worker. Importing the library into a worker itself is
+recommended instead.
 
 ### Methods of a GIF object
 These methods are, non-enumerable, non-configurable and non-writeable properties
@@ -115,14 +118,17 @@ internal uses.
      indicates whether the `Global Color Table` is sorted or not -
      type: `int`, `0` or `1`
     * `size`:
-     indicates whether the size of `Global Color Table` -
+     indicates the size of `Global Color Table` (`2 ** ( size + 1 )`) -
      type: `int`, `0-7`
-* `globalColorTable`: type: `Array` if `globalColorTableFlag`
- equals `1`, otherwise `undefined`  
+* `globalColorTable`:
+ type: `Array` if `globalColorTableFlag` equals `1`, otherwise `undefined`  
  individual colors are stored in `Array`s with the length of `3`
-* `repeat`: number of times for the GIF to be repeated and `0` means
- repeat forever - type: `uint8`
-* `frames`: array containing the frames of the GIF - type: `Array`
+* `repeat`:
+ number of times for the GIF to be repeated, where `0` means repeat forever -
+ type: `uint8`
+* `frames`:
+ array containing the frames of the GIF -
+ type: `Array`
 
 ### Properties of frame object
 The details of the frames are stored in an `Object`.
@@ -130,14 +136,14 @@ The details of the frames are stored in an `Object`.
 * `graphicExtension`:
  object containing the `Graphics Control Extension` - type: `Object`
   * `disposalMethod`:
-   type: `int`
+   type: `int`, `0-7`
   * `userInputFlag`:
    type: `int`, `0` or `1`
   * `transparentColorFlag`:
    type: `int`, `0` or `1`
   * `delay`:
-   the duration of which the frame should be displayed for in milliseconds -
-   type: `uint16`
+   the duration of which the frame should be displayed for
+   **in milliseconds** - type: `int`
   * `transparentColorIndex`:
    type: `uint8`
 * `descriptor`:
@@ -151,6 +157,7 @@ The details of the frames are stored in an `Object`.
   * `height`:
    height of the Image Data - type: `uint16`
   * `packed`:
+   the *packed* byte - type: `Object`
     * `localColorTableFlag`:
      indicates whether a `Local Color Table` is present or not -
      type: `int`, `0` or `1`
@@ -161,20 +168,23 @@ The details of the frames are stored in an `Object`.
      indicates whether the `Local Color Table` is sorted or not -
      type: `int`, `0` or `1`
     * `size`:
-     indicates whether the size of `Local Color Table` -
+     indicates the size of `Local Color Table` (`2 ** ( size + 1 )`) -
      type: `int`, `0-7`
-* `localColorTable`: type: `Array` if `localColorTableFlag`
- equals `1`, otherwise `undefined`  
+* `localColorTable`:
+ type: `Array` if `localColorTableFlag` equals `1`, otherwise `undefined`  
  individual colors are stored in `Array`s with the length of `3`
 * `minCodeSize`:
  minimum code size required for color table building - type: `uint8`, `2-8`
-* `rawData`:  contains the concatenated Image Data sub-blocks - type: `Array`,
+* `rawData`:
+ contains the concatenated Image Data sub-blocks - type: `Array`,
  will be `undefined` if you call `.inflate(index, true)`  
  individual bytes are stored as `uint8`s
-* `data`: contains decompressed color codes - type: `Array`
+* `data`:
+ contains decompressed color codes - type: `Array`
  if `.inflate()` was called, otherwise `undefined`  
  individual codes are stored as `uint8`s
-* `deinterlacedData`: contains deinterlaced color codes - type: `Array`
+* `deinterlacedData`:
+ contains deinterlaced color codes - type: `Array`
  if `.deinterlace()` was called or `null` if `.deinterlace(index, true)` was
  called, otherwise `undefined`  
  individual codes are stored as `uint8`s
@@ -185,8 +195,7 @@ Worker addition can be found in [this Gist][5].
 
 ## Sources
 [What's In A GIF - Bit by Byte][3] - Very easy to understand and detailed blog
-by Matthew Flickinger
-
+by Matthew Flickinger  
 [gifuct-js][4] - LZW and deinterlace by Matt Way
 
 ## License
@@ -197,3 +206,4 @@ WTFPL
 [3]: http://www.matthewflickinger.com/lab/whatsinagif/bits_and_bytes.asp
 [4]: https://github.com/matt-way/gifuct-js
 [5]: https://gist.github.com/friendlyanon/c63fe71a01001ce744b94cb65a8fca1e
+[6]: https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm

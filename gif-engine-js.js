@@ -125,7 +125,8 @@ const GIF = (() => {
     if (overwriteData) {
       frame.data = newPixels;
       frame.deinterlacedData = null;
-    } else
+    }
+    else
       frame.deinterlacedData = newPixels;
     Object.defineProperty(this, GifObjInterlaceSymbol, { value: true });
     return newPixels;
@@ -197,7 +198,8 @@ const GIF = (() => {
         table[i][++p] = gctView[i * 3 + p];
       }
       gif.globalColorTable = table;
-    } else ++pos;
+    }
+    else ++pos;
     let frame = 0;
     const frameTemplate = () => ({
       graphicExtension: void 0,
