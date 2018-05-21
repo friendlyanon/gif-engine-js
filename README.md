@@ -6,10 +6,9 @@ Really basic JavaScript library written in ECMAScript 2017 for parsing GIF
 ```javascript
 fetch("//url.to/my.gif") /* request for a GIF file, can also be a filesystem
                           * read if you use Node or similar */
-    .then(response => response.arrayBuffer()) // grab the ArrayBuffer
-    .then(GIF)                                // ArrayBuffer is first argument
-    .then(async (gifObj, err) => {
-      // code to manipulate raw GIF data or deal with error
+    .then(GIF)
+    .then(async (gifObj) => {
+      // code to manipulate raw GIF data
 
       const inflatedFrameData = await gifObj.inflate(0);
       /* returns an array containing decompressed color codes of the first
@@ -34,6 +33,12 @@ fetch("//url.to/my.gif") /* request for a GIF file, can also be a filesystem
        * will call them for you when necessary */
     })
 ```
+You'll notice that the `Response` object can be passed directly to the `GIF`
+function. This is because `GIF` has a property (`GIF.Response`) which will be
+checked using `instanceof` against the first argument. If it matches, then the
+`[GIF.responseMethod]` method of the input will be called, which is by default
+`arrayBuffer`, to compliment `fetch` in the browsers perfectly. Obviously, you
+may change this as you wish depending on what you use to make requests.
 
 ## Motivation
 I needed a versatile library to process GIFs for personal use, but the already
